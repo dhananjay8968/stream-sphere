@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "video sharing & hosting platform",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/dhananjay8968/stream-sphere/issues"
   },
-  "homepage": "https://github.com/dhananjay8968/stream-sphere#readme"
+  "homepage": "https://github.com/dhananjay8968/stream-sphere#readme",
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
 }
