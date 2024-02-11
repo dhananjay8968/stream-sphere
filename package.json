@@ -1,0 +1,19 @@
+{
+  "name": "stream-sphere",
+  "version": "1.0.0",
+  "description": "video sharing & hosting platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhananjay8968/stream-sphere.git"
+  },
+  "author": "dhananjay8968",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dhananjay8968/stream-sphere/issues"
+  },
+  "homepage": "https://github.com/dhananjay8968/stream-sphere#readme"
+}
