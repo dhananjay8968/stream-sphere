@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/fileupload.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 import { upload } from "../middlewares/multer.middleware.js"
+import mongoose from "mongoose"
 
 
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -305,7 +306,7 @@ const updateUserCoverImage = asyncHandler(async(req,res) => {
 
 const getUserChannelProfile = asyncHandler(async (req,res) => {
     const { username } = req.params
-    if(!username?.trim) {
+    if(!username?.trim()) {
         throw new ApiError(400,"username is missing")
     }
     const channel = await User.aggregate([
@@ -343,7 +344,7 @@ const getUserChannelProfile = asyncHandler(async (req,res) => {
                     $size: "$subscribedTo"
                 },
                 isSubscribed: {
-                    $condition: 
+                    $cond: 
                     {
                         if: {$in: [req.user?._id,"$subscribers.subscriber"]},
                         then: true,
