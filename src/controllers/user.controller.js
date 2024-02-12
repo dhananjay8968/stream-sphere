@@ -1,10 +1,9 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from '../utils/ApiError.js'
 import { User } from "../models/user.models.js"
-import { uploadOnCloudinary } from "../utils/fileupload.js"
+import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/fileupload.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
-import { upload } from "../middlewares/multer.middleware.js"
 import mongoose from "mongoose"
 
 
@@ -51,8 +50,6 @@ const registerUser = asyncHandler( async (req,res) => {
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-    console.log("Avatar path", avatarLocalPath)
-    console.log("here", avatar);
     
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
@@ -63,8 +60,14 @@ const registerUser = asyncHandler( async (req,res) => {
     const user = await User.create(
         {
             fullName,
-            avatar: avatar.url,
-            coverImage: coverImage?.url || "",
+            avatar: {
+                public_id: avatar.public_id,
+                url: avatar.secure_url
+            },
+            coverImage: {
+                public_id: coverImage?.public_id || "",
+                url: coverImage?.secure_url || ""
+            },
             email,
             password,
             username: username.toLowerCase()
@@ -116,7 +119,8 @@ const loginUser = asyncHandler(async (req,res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None"
     }
     return res
     .status(200)
@@ -138,8 +142,8 @@ const loginUser = asyncHandler(async (req,res) => {
 const logoutUser = asyncHandler(async(req,res) => {
     await User.findByIdAndUpdate(req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1 
             }
         },
         {
@@ -149,7 +153,8 @@ const logoutUser = asyncHandler(async(req,res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None"
     }
     return res
     .status(200)
@@ -159,7 +164,7 @@ const logoutUser = asyncHandler(async(req,res) => {
 })
 
 const refreshAccessToken = asyncHandler(async (req,res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken
     if(!incomingRefreshToken) {
         throw new ApiError(401,"Unauthorized request")
     }
@@ -259,20 +264,31 @@ const updateUserAvatar = asyncHandler(async(req,res) => {
     if(!avatar.url) {
         throw new ApiError(400,"Error while uploading on avatar")
     }
+    const user = await User.findById(req.user._id).select("avatar");
 
-    const user = await User.findByIdAndUpdate(
+    const avatarToDelete = user.avatar.public_id;
+
+    const updatedUser = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatar.url
+                avatar: {
+                    public_id: avatar.public_id,
+                    url: avatar.secure_url
+                }
             }
         },
         {new: true}
     ).select("-password")
+
+    if (avatarToDelete && updatedUser.avatar.public_id) {
+        await deleteOnCloudinary(avatarToDelete);
+    }
+
     return res
     .status(200)
     .json(
-        new ApiResponse(200,user,"Avatar image updated")
+        new ApiResponse(200,updatedUser,"Avatar image updated")
     )
 })
 
@@ -288,19 +304,31 @@ const updateUserCoverImage = asyncHandler(async(req,res) => {
         throw new ApiError(400,"Error while uploading on coverImage")
     }
 
-    const user = await User.findByIdAndUpdate(
+    const user = await User.findById(req.user._id).select("coverImage");
+
+    const coverImageToDelete = user.coverImage.public_id;
+
+    const updatedUser = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                coverImage: coverImage.url
+                coverImage: {
+                    public_id: coverImage.public_id,
+                    url: coverImage.secure_url
+                }
             }
         },
         {new: true}
     ).select("-password")
+
+    if (coverImageToDelete && updatedUser.coverImage.public_id) {
+        await deleteOnCloudinary(coverImageToDelete);
+    }
+
     return res
     .status(200)
     .json(
-        new ApiResponse(200,user,"Cover image updated")
+        new ApiResponse(200,updatedUser,"Cover image updated")
     )
 })
 
