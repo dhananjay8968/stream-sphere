@@ -1,7 +1,7 @@
-import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/piError.js";
-import { Discussion } from "../models/discussion.model.js";
-import ApiResponse from "../utils/ApiResponse.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
+import {ApiError} from "../utils/ApiError.js";
+import { Discussion } from "../models/discussion.models.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
 import mongoose, { isValidObjectId } from "mongoose";
 
 const createDiscussion = asyncHandler(async (req, res) => {
